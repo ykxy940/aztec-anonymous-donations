@@ -10,12 +10,8 @@ import {
   computeMessageSecretHash,
   AztecAddress,
 } from "@aztec/aztec.js";
-import {
-  TokenContract,
-  TokenContractArtifact,
-} from "@aztec/noir-contracts.js/Token";
 
-// import { AztecAddress } from "@aztec/foundation";
+import { TokenContractArtifact } from "./contracts/token/src/artifacts/Token";
 
 import 'dotenv/config';
 
@@ -38,20 +34,10 @@ const adminWallet = await getSchnorrWallet(
 
 const adminAddress = adminWallet.getAddress();
 
-// change this deployedContract.address
+// change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x2fd4503a9b855a852272945df53d7173297c1469cceda31048b85118364b09a3"
+  "0x0827de19755eaa5a8f73b4a4df276964b03e8fbb543abf8f40af4166bf0c6d15"
 );
-
-// const deployedContract = await TokenContract.deploy(
-//   wallet, // wallet instance
-//   wallet.getAddress(), // account
-//   "ANON Token", // constructor arg1
-//   "ANON", // constructor arg2
-//   18
-// ) // constructor arg3
-//   .send()
-//   .deployed();
 
 export const createAztecAccount = async () => {
   try {
