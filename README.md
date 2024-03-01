@@ -1,4 +1,6 @@
-### A Frame for Anonymous donations powered by Aztec Protocol - https://aztec.network
+### A Frame for Anonymous donations powered by Aztec Protocol
+
+https://aztec.network
 
 This was a submission for the bounty on bountcaster for a frame utilizing the Noir programming language - https://www.bountycaster.xyz/bounty/0xf19067379c5ed332da2d22c28f30ac38183befe3
 
