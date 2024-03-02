@@ -1,7 +1,9 @@
-const sqlite3 = require("sqlite3").verbose();
+import sqlite3 from 'sqlite3';
+
+let db;
 
 export async function initializeDatabase() {
-  const db = new sqlite3.Database("./aztec.db", (err) => {
+  db = new sqlite3.Database("./aztec.db", (err) => {
     if (err) {
       console.error(err.message);
     }
@@ -40,6 +42,7 @@ export function checkAztecAddress(fid: number) {
     );
   });
 }
+
 
 export function storeAztecAddress(fid: number, address: string) {
   return new Promise((resolve, reject) => {

@@ -1,5 +1,5 @@
 import { Button, Frog, TextInput } from 'frog'
-import { mintTokens, createAztecAccount, addMinter, getBalance, sendDonation, getDonationBalance } from './utils';
+import { mintTokens, createAztecAccount, getBalance, sendDonation, getDonationBalance } from './utils';
 import { initializeDatabase, createTable, checkAztecAddress, storeAztecAddress } from './db/database';
 
 await initializeDatabase()
@@ -98,20 +98,15 @@ app.frame('/claim', async (c) => {
   const { frameData } = c
   const { fid } = frameData
 
+  console.log("reached here")
+  //let address = await checkAztecAddress(Number(fid))
+  
   let address;
+  
 
-try {
- address = await checkAztecAddress(Number(fid)); 
- console.log('Address found:', address);
-} catch (error) {
- console.error('Error:', error);
- // Handle any errors here
- address = null; // or handle the error as needed
-}
+  console.log("Address: ", address)
 
-  console.log("First log of Address: ", address)
-
-  if (address == null) {
+  if (!address) {
     const aztecAaddress = await createAztecAccount()
     if (!aztecAaddress) {
       address = null
@@ -120,17 +115,9 @@ try {
     }
   }
 
-  console.log("Second log of Address: ", address)
+  console.log("Address: ", address)
 
-  let balance;
-  const minter = await addMinter(String(address))
-  console.log("Minter Output: ", minter);  
-
-  if (!minter) {
-    balance = null
-  } else {
-    balance = await mintTokens(String(address))
-  }
+  const balance = await mintTokens(String(address))
 
   return c.res({
     title: 'Claim $ANON',
@@ -166,7 +153,7 @@ try {
       </div>
     ),
     intents: [
-      balance && <Button action="/donate">Donate</Button>,
+      <Button action="/donate">Donate</Button>,
       <Button action="/">Back</Button>,
     ],
   })
