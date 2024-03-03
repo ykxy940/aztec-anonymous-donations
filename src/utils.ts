@@ -11,7 +11,7 @@ import {
   AztecAddress,
 } from "@aztec/aztec.js";
 
-import { TokenContractArtifact } from "./contracts/token/src/artifacts/Token";
+import { TokenContractArtifact, TokenContract } from "./contracts/token/src/artifacts/Token";
 
 import 'dotenv/config';
 
@@ -22,22 +22,39 @@ const pxe = createPXEClient(PXE_URL);
 
 const accounts = await getDeployedTestAccountsWallets(pxe);
 
-const private_key = process.env.ADMIN_SIGNING_PRIVATE_KEY || ""
+// const private_key = process.env.ADMIN_SIGNING_PRIVATE_KEY || ""
 
-const adminSigningPrivateKey = GrumpkinScalar.fromString(private_key);
+// const adminSigningPrivateKey = GrumpkinScalar.fromString(private_key);
 
-const adminWallet = await getSchnorrWallet(
-  pxe,
-  accounts[0].getAddress(),
-  adminSigningPrivateKey
-);
+//const adminWallet = await getSchnorrWallet(
+//  pxe,
+//  accounts[0].getAddress(),
+//  adminSigningPrivateKey
+//);
 
+const adminWallet = accounts[0]
 const adminAddress = adminWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x0827de19755eaa5a8f73b4a4df276964b03e8fbb543abf8f40af4166bf0c6d15"
+  "0x0ce0a909070a25a838fbe5d10a9bec79779b8c8b161c3d8211507a1a85109bcb"
 );
+
+export async function deployANONToken() {
+  const deployedContract = await TokenContract.deploy(
+    adminWallet, // wallet instance
+    adminWallet.getAddress(), // account
+    "ANON", // constructor arg1
+    "ANONToken", // constructor arg2
+    18
+  ) // constructor arg3
+    .send()
+    .deployed();
+
+  console.log("deployedContract Address: ", deployedContract.address.toString());
+
+  return deployedContract.address;
+}
 
 export const createAztecAccount = async () => {
   try {
@@ -54,21 +71,29 @@ export const createAztecAccount = async () => {
 }
 
 export const addMinter = async (address: string) => {
+  console.log("Passed In Address: ", address);
+  console.log("Admin Address: ", adminAddress.toString());
   try {
-    const contract = await Contract.at(
+    //const contract = await Contract.at(
+      //deployedTokenContractAddress,
+     // TokenContractArtifact,
+     // adminWallet
+   // );
+  
+  const tokenContractAdmin = await TokenContract.at(
       deployedTokenContractAddress,
-      TokenContractArtifact,
       adminWallet
     );
-
+  console.log("Contract Adress: ", tokenContractAdmin)
     // caller has to be an admin
-    await contract.methods
+    await tokenContractAdmin.methods
       .set_minter(AztecAddress.fromString(address), true)
       .send()
       .wait();
 
     return true;
   } catch (error) {
+    console.log("ERROR: ", error)
     return null;
   }
 };

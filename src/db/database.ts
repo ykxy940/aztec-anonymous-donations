@@ -1,15 +1,7 @@
 import sqlite3 from 'sqlite3';
+const db = new sqlite3.Database("./src/db/aztec.db")
 
-let db;
-
-export async function initializeDatabase() {
-  db = new sqlite3.Database("./aztec.db", (err) => {
-    if (err) {
-      console.error(err.message);
-    }
-    console.log("Connected to the aztec database.");
-  });
-}
+console.log("Database Connection Successful: ", db)
 
 export async function createTable() {
   db.run(
@@ -27,6 +19,7 @@ export async function createTable() {
 }
 
 export function checkAztecAddress(fid: number) {
+  console.log("we reached here")
   return new Promise((resolve, reject) => {
     db.get(
       `SELECT address FROM aztecaddresses WHERE fid = ?`,

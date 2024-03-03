@@ -1,8 +1,7 @@
 import { Button, Frog, TextInput } from 'frog'
-import { mintTokens, createAztecAccount, addMinter, getBalance, sendDonation, getDonationBalance } from './utils';
+import { deployANONToken, mintTokens, createAztecAccount, addMinter, getBalance, sendDonation, getDonationBalance } from './utils';
 import { initializeDatabase, createTable, checkAztecAddress, storeAztecAddress } from './db/database';
 
-await initializeDatabase()
 await createTable()
 
 export const app = new Frog({
@@ -10,7 +9,8 @@ export const app = new Frog({
   // hubApiUrl: 'https://api.hub.wevm.dev',
 })
 
-app.frame('/', (c) => {
+app.frame('/', async (c) => {
+  
   return c.res({
     title: 'Anonymous Donations',
     image: (
@@ -94,12 +94,14 @@ app.frame('/about', (c) => {
   })
 })
 
+
 app.frame('/claim', async (c) => {
   const { frameData } = c
   const { fid } = frameData
 
   let address;
 
+console.log("claim called");
 try {
  address = await checkAztecAddress(Number(fid)); 
  console.log('Address found:', address);
@@ -110,8 +112,7 @@ try {
 }
 
   console.log("First log of Address: ", address)
-
-  if (address == null) {
+  if (!address) {
     const aztecAaddress = await createAztecAccount()
     if (!aztecAaddress) {
       address = null
