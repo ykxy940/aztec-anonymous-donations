@@ -1,8 +1,6 @@
 import { Button, Frog, TextInput } from 'frog'
 import { deployANONToken, mintTokens, createAztecAccount, addMinter, getBalance, sendDonation, getDonationBalance } from './utils';
-import { initializeDatabase, createTable, checkAztecAddress, storeAztecAddress } from './db/database';
-
-await createTable()
+import { getWallet, storeWallet } from "./db/data";
 
 export const app = new Frog({
   // Supply a Hub API URL to enable frame verification.
@@ -99,39 +97,41 @@ app.frame('/claim', async (c) => {
   const { frameData } = c
   const { fid } = frameData
 
-  let address;
+  let wallet;
 
 console.log("claim called");
 try {
- address = await checkAztecAddress(Number(fid)); 
- console.log('Address found:', address);
+ wallet = await getWallet(Number(fid)); 
+ console.log('Wallet found:', wallet);
 } catch (error) {
  console.error('Error:', error);
  // Handle any errors here
- address = null; // or handle the error as needed
+ wallet = null; // or handle the error as needed
 }
 
-  console.log("First log of Address: ", address)
-  if (!address) {
-    const aztecAaddress = await createAztecAccount()
-    if (!aztecAaddress) {
-      address = null
+  console.log("Log of Wallet: ", wallet)
+  if (!wallet) {
+    const aztecAccount = await createAztecAccount()
+    console.log("WALLLLLETTTTTTTTTTTTT: ", aztecAccount)
+    if (!aztecAccount) {
+      wallet = null
     } else {
-      address = await storeAztecAddress(Number(fid), String(aztecAaddress))
+      wallet = await storeWallet(Number(fid), aztecAccount)
     }
   }
 
-  console.log("Second log of Address: ", address)
-
   let balance;
-  const minter = await addMinter(String(address))
+  const minter = await addMinter(wallet)
   console.log("Minter Output: ", minter);  
+  console.log("Parsed Wallet Object :", wallet);
 
   if (!minter) {
     balance = null
   } else {
-    balance = await mintTokens(String(address))
+    balance = await mintTokens(wallet)
   }
+
+  console.log("$ANON Balance: ", balance);
 
   return c.res({
     title: 'Claim $ANON',
@@ -162,7 +162,7 @@ try {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (address && balance) ? `You successfully claimed 10,000 $ANON tokens for donations to ${address}`: 'Could not claim $ANON tokens. Please try again later.'} 
+          { (wallet && balance) ? `You successfully claimed 10,000 $ANON tokens for donations to ${wallet.getAddress()}`: 'Could not claim $ANON tokens. Please try again later.'} 
         </div>
       </div>
     ),
