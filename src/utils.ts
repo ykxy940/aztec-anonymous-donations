@@ -161,15 +161,23 @@ export const claimTokens = async (
       TokenContractArtifact,
       adminWallet
     );
-
+    
+    console.log("Contract: ", contract)
     const amount = 10_000n;
 
+    // simulate nonce using randomness
+    let min = 0;
+    let max = 1000000;
+    let nonce = Math.floor(Math.random() * (max - min + 1)) + min;
+
     const _tx = await contract.methods
-      .transfer(amount, AztecAddress.fromString(address))
+      .transfer(adminAddress, AztecAddress.fromString(address), amount, nonce)
       .send()
       .wait();
+    console.log("Transaction: ", _tx);
     return _tx.txHash;
   } catch (error) {
+    console.log("Error: ", error);
     return null;
   }
 };
@@ -195,6 +203,7 @@ export const getUserBalance = async (address: string, signingKey: string) => {
 
     return _balance;
   } catch (error) {
+    console.log("Error: ", error);
     return null;
   }
 };
@@ -214,6 +223,7 @@ export const getDonationBalance = async () => {
 
     return _balance;
   } catch (error) {
+    console.log("Error: ", error);
     return null;
   }
 };
@@ -234,13 +244,18 @@ export const sendDonation = async (address: string, signingKey: string) => {
     );
 
     const amount = 1_000n;
+    // simulate nonce using randomness
+    let min = 0;
+    let max = 1000000;
+    let nonce = Math.floor(Math.random() * (max - min + 1)) + min;
 
     const _tx = await contract.methods
-      .transfer(amount, donationAddress)
+      .transfer(userWallet.getAddress(), donationAddress, amount)
       .send()
       .wait();
     return _tx.txHash;
   } catch (error) {
+    console.log("Error: ", error);
     return null;
   }
 }
