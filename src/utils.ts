@@ -5,14 +5,12 @@ import {
   ExtendedNote,
   GrumpkinScalar,
   createPXEClient,
-  Contract,
   Fr,
   computeMessageSecretHash,
   AztecAddress,
 } from "@aztec/aztec.js";
 
-// import { TokenContractArtifact, TokenContract } from "./contracts/token/src/artifacts/Token";
-import { TokenContract } from "@aztec/noir-contracts.js/Token";
+import { TokenContract } from "./contracts/token/src/artifacts/Token";
 
 import 'dotenv/config';
 
@@ -108,7 +106,7 @@ export const mintTokens = async () => {
     const userSecret = Fr.random();
     const userSecretHash = computeMessageSecretHash(userSecret);
 
-    const amount = 1_000_000_000n;
+    const amount = 250_000n;
 
     const receipt = await tokenContractAdmin.methods
       .mint_private(amount, userSecretHash)
@@ -153,7 +151,7 @@ export const claimTokens = async (
       adminWallet
     );
 
-    const amount = 10_000n;
+    const amount = 100n;
 
     let nonce = 0;
     console.log("Transfer Address: ", address);
@@ -228,7 +226,7 @@ export const sendDonation = async (address: string, signingKey: string) => {
       userWallet
     );
 
-    const amount = 1_000n;
+    const amount = 10n;
     
     let nonce = 0;
     

@@ -218,7 +218,7 @@ app.frame('/claim', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (address && txHash) ? `You successfully claimed 10,000 $ANON tokens for donations. Transaction Hash: ${txHash}`: 'Could not claim $ANON tokens. Please try again later.'} 
+          { (address && txHash) ? `You successfully claimed 100 $ANON tokens for donations. Transaction Hash: ${txHash}`: 'Could not claim $ANON tokens. Please try again later.'} 
         </div>
       </div>
     ),
@@ -276,7 +276,7 @@ app.frame('/donate', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {(address) ? 'Donate 1,000 $ANON tokens': 'Create a wallet and claim tokens before trying to donate'}
+          {(address) ? 'Donate 10 $ANON tokens': 'Create a wallet and claim tokens before trying to donate'}
         </div>
       </div>
     ),
