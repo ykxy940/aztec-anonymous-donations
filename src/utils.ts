@@ -11,10 +11,10 @@ import {
   AztecAddress,
 } from "@aztec/aztec.js";
 
-import { TokenContractArtifact, TokenContract } from "./contracts/token/src/artifacts/Token";
+// import { TokenContractArtifact, TokenContract } from "./contracts/token/src/artifacts/Token";
+import { TokenContract } from "@aztec/noir-contracts.js/Token";
 
 import 'dotenv/config';
-import crypto from "crypto";
 
 const PXE_URL = process.env.PXE_URL || "http://localhost:8080";
 
@@ -179,9 +179,8 @@ export const getUserBalance = async (address: string, signingKey: string) => {
       GrumpkinScalar.fromString(signingKey),
     );
 
-    const contract = await Contract.at(
+    const contract = await TokenContract.at(
       deployedTokenContractAddress,
-      TokenContractArtifact,
       userWallet
     );
 
@@ -199,9 +198,8 @@ export const getUserBalance = async (address: string, signingKey: string) => {
 // Used to get the balance of the donation address
 export const getDonationBalance = async () => {
   try {
-    const contract = await Contract.at(
+    const contract = await TokenContract.at(
       deployedTokenContractAddress,
-      TokenContractArtifact,
       donationWallet
     );
 
@@ -225,9 +223,8 @@ export const sendDonation = async (address: string, signingKey: string) => {
       GrumpkinScalar.fromString(signingKey),
     );
 
-    const contract = await Contract.at(
+    const contract = await TokenContract.at(
       deployedTokenContractAddress,
-      TokenContractArtifact,
       userWallet
     );
 
