@@ -11,6 +11,8 @@ The frame was built using the frog framework by Paradigm and Wevm - https://frog
 To run the code you must download aztec sandbox as it is a prerequiste for running the Private Execution Environment (PXE).
 Here is the quickstart guide - https://docs.aztec.network/developers/getting_started/quickstart
 
+You will also need to install Redis on your server.
+
 You can then install frog and run the application via the commands below.
 
 ```
