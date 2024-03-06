@@ -106,8 +106,7 @@ try {
  let walletDetails = await getWalletDetails(String(fid));
 
  if (!walletDetails) {
-  const aztecAccount = await createAztecAccount()
-  console.log('aztecAccount:', aztecAccount)
+  const aztecAccount = await createAztecAccount();
     if (!aztecAccount) {
       address = null
     } else {
@@ -121,8 +120,6 @@ try {
 } catch (error) {
  console.error('Error:', error);
 }
-
-console.log("Address: ", address);
 
   return c.res({
     title: 'Create Wallet',
@@ -168,12 +165,13 @@ app.frame('/claim', async (c) => {
   const { fid } = frameData
 
   let address;
-  let txHash
+  let txHash;
 
   try {
-  let walletDetails = await getWalletDetails(String(fid)); 
+  let walletDetails = await getWalletDetails(String(fid));
+  console.log("Wallet Details: ", walletDetails);
   if (!walletDetails) {
-    address = null
+    address = null;
   } else {
     address = walletDetails.address;
   }
@@ -182,11 +180,14 @@ app.frame('/claim', async (c) => {
  console.error('Error:', error);
 }
 
-  if (address) {
-    txHash = await claimTokens(String(address))
-  } else {
+  if (!address) {
     txHash = null;
+  } else {
+    txHash = await claimTokens(String(address));
   }
+  
+  console.log("address: ", address);
+  console.log("txHash: ", txHash);
 
   return c.res({
     title: 'Claim $ANON',
