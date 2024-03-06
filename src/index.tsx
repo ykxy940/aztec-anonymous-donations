@@ -38,16 +38,16 @@ app.frame('/', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {'ANONYMOUS DONATIONS Powered by Aztec Protocol 1. Create Wallet 2. Claim $ANON 3. Donate'}
+          {'ANONYMOUS DONATIONS Powered by Aztec Protocol        Create Wallet | Claim $ANON     Donate'}
         </div>
       </div>
     ),
     intents: [
-      <Button action="/claim">Create Wallet</Button>,
-      <Button action="/create">Claim $ANON</Button>,
+      <Button action="/create">Create Wallet</Button>,
+      <Button action="/claim">Claim $ANON</Button>,
       <Button action="/donate">Donate</Button>,
-      // <Button action="/about">About</Button>,
-      <Button action="/deploy">Deploy</Button>,
+      <Button action="/about">About</Button>,
+      // <Button action="/deploy">Deploy</Button>,
       // <Button action="/mint">Mint</Button>,
     ],
   })
@@ -361,7 +361,7 @@ app.frame('/donate-transaction', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (txHash && donationBalance) ? `You donated 1,000 $ANON tokens successfully. Transaction Hash: ${txHash} Total Donations: ${donationBalance} $ANON`: `${errorMessage}`}
+          { (txHash && donationBalance) ? `You donated $ANON tokens successfully. Transaction Hash: ${txHash} Total Donations: ${donationBalance} $ANON`: `${errorMessage}`}
         </div>
       </div>
     ),
