@@ -28,7 +28,7 @@ const donationAddress = donationWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x15d2095bb5ae00cf23d231cee3b5396d1c63618954d3f9ed247fabe32006f85b"
+  "0x05da99d9649342b43b2cb4bf440e1a7bcb7182834c9fb9c0a49077ce87f4bf35"
 );
 
 export async function deployANONToken() {
@@ -106,7 +106,7 @@ export const mintTokens = async () => {
     const userSecret = Fr.random();
     const userSecretHash = computeMessageSecretHash(userSecret);
 
-    const amount = 250_000n;
+    const amount = 1_000_000_000n;
 
     const receipt = await tokenContractAdmin.methods
       .mint_private(amount, userSecretHash)
@@ -151,7 +151,7 @@ export const claimTokens = async (
       adminWallet
     );
 
-    const amount = 100n;
+    let amount = 10_000n;
 
     let nonce = 0;
     console.log("Transfer Address: ", address);
@@ -226,7 +226,7 @@ export const sendDonation = async (address: string, signingKey: string) => {
       userWallet
     );
 
-    const amount = 10n;
+    const amount = 1_000n;
     
     let nonce = 0;
     
