@@ -6,27 +6,28 @@ const redis = new Redis({
  port: 6379, // or the specific port if different
 });
 
-export async function getWallet(fid) {
+export async function getWalletDetails(fid: string) {
   try {
-    let wallet = await redis.get(fid);
-    if (wallet) {
-      wallet = JSON.parse(wallet);
-    }
-    console.log(`Wallet for key ${fid}: ${wallet}`);
-    return wallet;
+    const values = await redis.hgetall(fid);
+    console.log("Retrieved values:", values);
+    return values;
   } catch (error) {
     console.error(`Failed to retrieve wallet: ${error}`);
   }
 }
 
-export async function storeWallet(fid, wallet) {
+export async function storeWalletDetails(fid: string, address: string, signingKey: string) {
   try {
-    const wallet = JSON.parse(wallet)
-    await redis.set(fid, wallet);
-    return wallet;
-    console.log(`Wallet stored with key: ${fid}`);
+    await redis.hset(
+      fid,
+      "address",
+      address,
+      "signingKey",
+      signingKey
+    );
+    console.log("Values stored successfully");
   } catch (error) {
-    console.error(`Failed to store wallet: ${error}`);
+    console.error("Failed to store values:", error);
   }
 }
 

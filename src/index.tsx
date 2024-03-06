@@ -1,6 +1,6 @@
-import { Button, Frog, TextInput } from 'frog'
-import { deployANONToken, mintTokens, createAztecAccount, addMinter, getBalance, sendDonation, getDonationBalance } from './utils';
-import { getWallet, storeWallet } from "./db/data";
+import { Button, Frog } from 'frog'
+import { deployANONToken, mintTokens, claimTokens, createAztecAccount, getUserBalance, sendDonation, getDonationBalance } from './utils';
+import { getWalletDetails, storeWalletDetails } from "./db/data";
 
 export const app = new Frog({
   // Supply a Hub API URL to enable frame verification.
@@ -38,14 +38,17 @@ app.frame('/', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {'ANONYMOUS DONATIONS Powered by Aztec Protocol'}
+          {'ANONYMOUS DONATIONS Powered by Aztec Protocol 1. Create Wallet 2. Claim $ANON 3. Donate'}
         </div>
       </div>
     ),
     intents: [
-      <Button action="/claim">Claim $ANON</Button>,
+      <Button action="/claim">Create Wallet</Button>,
+      <Button action="/create">Claim $ANON</Button>,
       <Button action="/donate">Donate</Button>,
-      <Button action="/about">About</Button>,
+      // <Button action="/about">About</Button>,
+      <Button action="/deploy">Deploy</Button>,
+      // <Button action="/mint">Mint</Button>,
     ],
   })
 })
@@ -81,7 +84,7 @@ app.frame('/about', (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {'Claim $ANON tokens and donate anonymously to a cause you care about.'}
+          {'First create an Aztec Wallet, then Claim $ANON tokens and Donate anonymously to a cause you care about.'}
         </div>
       </div>
     ),
@@ -92,46 +95,94 @@ app.frame('/about', (c) => {
   })
 })
 
+app.frame('/create', async (c) => {
+  const { frameData } = c
+  const { fid } = frameData
+
+  let address;
+  let signingKey;
+
+try {
+ let walletDetails = await getWalletDetails(String(fid)); 
+ if (!walletDetails) {
+  const aztecAccount = await createAztecAccount()
+    if (!aztecAccount) {
+      address = null
+    } else {
+      address = aztecAccount.address;
+      signingKey = aztecAccount.signingKey;
+      await storeWalletDetails(String(fid), String(address), String(signingKey))
+    }
+ } else {
+   address = walletDetails.address;
+ }
+} catch (error) {
+ console.error('Error:', error);
+}
+
+  return c.res({
+    title: 'Create Wallet',
+    image: (
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#7D4AE9',
+          backgroundSize: '100% 100%',
+          display: 'flex',
+          flexDirection: 'column',
+          flexWrap: 'nowrap',
+          height: '100%',
+          justifyContent: 'center',
+          textAlign: 'center',
+          width: '100%',
+        }}
+      >
+        <div
+          style={{
+            color: 'white',
+            fontSize: 60,
+            fontStyle: 'normal',
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            marginTop: 30,
+            padding: '0 120px',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          { (address) ? `Wallet: ${address}`: 'Could not create wallet. Please try again later.'} 
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action="/">Back</Button>,
+    ],
+  })
+})
 
 app.frame('/claim', async (c) => {
   const { frameData } = c
   const { fid } = frameData
 
-  let wallet;
+  let address;
+  let txHash
 
-console.log("claim called");
-try {
- wallet = await getWallet(Number(fid)); 
- console.log('Wallet found:', wallet);
+  try {
+  let walletDetails = await getWalletDetails(String(fid)); 
+  if (!walletDetails) {
+    address = null
+  } else {
+    address = walletDetails.address;
+  }
+
 } catch (error) {
  console.error('Error:', error);
- // Handle any errors here
- wallet = null; // or handle the error as needed
 }
 
-  console.log("Log of Wallet: ", wallet)
-  if (!wallet) {
-    const aztecAccount = await createAztecAccount()
-    console.log("WALLLLLETTTTTTTTTTTTT: ", aztecAccount)
-    if (!aztecAccount) {
-      wallet = null
-    } else {
-      wallet = await storeWallet(Number(fid), aztecAccount)
-    }
-  }
-
-  let balance;
-  const minter = await addMinter(wallet)
-  console.log("Minter Output: ", minter);  
-  console.log("Parsed Wallet Object :", wallet);
-
-  if (!minter) {
-    balance = null
+  if (address) {
+    txHash = await claimTokens(String(address))
   } else {
-    balance = await mintTokens(wallet)
+    txHash = null;
   }
-
-  console.log("$ANON Balance: ", balance);
 
   return c.res({
     title: 'Claim $ANON',
@@ -162,18 +213,35 @@ try {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (wallet && balance) ? `You successfully claimed 10,000 $ANON tokens for donations to ${wallet.getAddress()}`: 'Could not claim $ANON tokens. Please try again later.'} 
+          { (address && txHash) ? `You successfully claimed 10,000 $ANON tokens for donations. Transaction Hash: ${txHash}`: 'Could not claim $ANON tokens. Please try again later.'} 
         </div>
       </div>
     ),
     intents: [
-      balance && <Button action="/donate">Donate</Button>,
+      txHash && <Button action="/donate">Donate</Button>,
       <Button action="/">Back</Button>,
     ],
   })
 })
 
-app.frame('/donate', (c) => {
+app.frame('/donate', async (c) => {
+  const { frameData } = c
+  const { fid } = frameData
+
+  let address;
+
+  try {
+  let walletDetails = await getWalletDetails(String(fid)); 
+  if (!walletDetails) {
+    address = null
+  } else {
+    address = walletDetails.address;
+  }
+
+  } catch (error) {
+  console.error('Error:', error);
+}
+
   return c.res({
     title: 'Donate $ANON',
     image: (
@@ -203,49 +271,66 @@ app.frame('/donate', (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {'Donate $ANON tokens'}
+          {(address) ? 'Donate 1,000 $ANON tokens': 'Create a wallet and claim tokens before trying to donate'}
         </div>
       </div>
     ),
     intents: [
-      <TextInput placeholder="Enter $ANON Amount" />,
-      <Button action="/donate-transaction">Donate</Button>,
+      !address && <Button action="/create">Create Wallet</Button>,
+      <Button action="/donate-transaction">Confirm</Button>,
       <Button action="/">Back</Button>,
     ],
   })
 })
 
 app.frame('/donate-transaction', async (c) => {
-  const { frameData, inputText } = c
+  const { frameData } = c
   let { fid } = frameData
 
-  let address = await checkAztecAddress(Number(fid))
+  let address;
+  let signingKey;
+  let txHash;
+  let donationBalance;
   let errorMessage;
 
-  if (!address) {
-    errorMessage = "Could not find your Aztec account. Go back and Claim $ANON tokens."
+  try {
+  let walletDetails = await getWalletDetails(String(fid)); 
+  if (!walletDetails) {
+    address = null
+  } else {
+    address = walletDetails.address;
+    signingKey = walletDetails.signingKey;
   }
 
-  const balance = await getBalance(String(address))
+} catch (error) {
+ console.error('Error:', error);
+}
+  
+  if (!address) {
+    errorMessage = "Could not find your Aztec account. Create a wallet and Claim $ANON tokens."
+  }
+
+  const balance = await getUserBalance(String(address), String(signingKey))
 
   if (!balance) {
     errorMessage = "Could not get your $ANON balance. Go back and Claim $ANON tokens."
   }
 
-  const amount = Number(inputText)
-
-  if (Number(balance) < amount) {
+  if (Number(balance) < Number(1000)) {
     errorMessage = "You do not have enough $ANON tokens. Go back and Claim $ANON tokens."
+  } else {
+    txHash = await sendDonation(String(address), String(signingKey));
+
+    if (!txHash) {
+      errorMessage = "Could not donate $ANON tokens. Try again later."
+    }
+
+    donationBalance = await getDonationBalance();
+
+    if (!donationBalance) {
+      errorMessage = "Could not get Total Donations. Try again later."
+    }
   }
-
-  let tx = null
-  tx = await sendDonation(String(address), amount)
-
-  const donationBalance = await getDonationBalance()
-
-  console.log("Transaction: ", tx)
-
-  // const tx_url = `https://etherscan.io/tx/${tx.hash}`
 
   return c.res({
     title: '$ANON Donation Transaction',
@@ -276,13 +361,95 @@ app.frame('/donate-transaction', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { tx ? `You donated ${amount} $ANON tokens successfully. Total Donations: ${donationBalance} $ANON`: `${errorMessage}`}
+          { (txHash && donationBalance) ? `You donated 1,000 $ANON tokens successfully. Transaction Hash: ${txHash} Total Donations: ${donationBalance} $ANON`: `${errorMessage}`}
         </div>
       </div>
     ),
     intents: [
-      // tx && <Button.Link href="/tx">View</Button.Link>,
-      !tx && <Button action="/claim">Claim $ANON</Button>,
+      <Button action="/">Back</Button>,
+    ],
+  })
+})
+
+app.frame('/deploy', async (c) => {
+  const deployedContractAddress = await deployANONToken();
+
+  return c.res({
+    title: 'Deploy',
+    image: (
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#7D4AE9',
+          backgroundSize: '100% 100%',
+          display: 'flex',
+          flexDirection: 'column',
+          flexWrap: 'nowrap',
+          height: '100%',
+          justifyContent: 'center',
+          textAlign: 'center',
+          width: '100%',
+        }}
+      >
+        <div
+          style={{
+            color: 'white',
+            fontSize: 60,
+            fontStyle: 'normal',
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            marginTop: 30,
+            padding: '0 120px',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {`Successfully deployed ANONToken contract : ${deployedContractAddress}`}
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action="/">Back</Button>,
+    ],
+  })
+})
+
+app.frame('/mint', async (c) => {
+  const balance = await mintTokens();
+
+  return c.res({
+    title: 'Mint',
+    image: (
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#7D4AE9',
+          backgroundSize: '100% 100%',
+          display: 'flex',
+          flexDirection: 'column',
+          flexWrap: 'nowrap',
+          height: '100%',
+          justifyContent: 'center',
+          textAlign: 'center',
+          width: '100%',
+        }}
+      >
+        <div
+          style={{
+            color: 'white',
+            fontSize: 60,
+            fontStyle: 'normal',
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            marginTop: 30,
+            padding: '0 120px',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {`ANONToken Admin Balance : ${balance}`}
+        </div>
+      </div>
+    ),
+    intents: [
       <Button action="/">Back</Button>,
     ],
   })

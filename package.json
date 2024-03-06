@@ -9,11 +9,11 @@
     "@aztec/accounts": "^0.24.0",
     "@aztec/aztec.js": "^0.24.0",
     "@aztec/noir-contracts.js": "^0.24.0",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "frog": "latest",
     "hono": "^4",
-    "ioredis": "^5.3.2",
-    "sqlite3": "^5.1.7"
+    "ioredis": "^5.3.2"
   },
   "devDependencies": {
     "typescript": "latest"

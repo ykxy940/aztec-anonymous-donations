@@ -14,16 +14,19 @@ import {
 import { TokenContractArtifact, TokenContract } from "./contracts/token/src/artifacts/Token";
 
 import 'dotenv/config';
+import crypto from "crypto";
 
 const PXE_URL = process.env.PXE_URL || "http://localhost:8080";
-const encryptionPrivateKey = GrumpkinScalar.random();
-const signingPrivateKey = GrumpkinScalar.random();
+
 const pxe = createPXEClient(PXE_URL);
 
 const accounts = await getDeployedTestAccountsWallets(pxe);
 
 const adminWallet = accounts[0]
 const adminAddress = adminWallet.getAddress();
+
+const donationWallet = accounts[1];
+const donationAddress = donationWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
@@ -48,19 +51,36 @@ export async function deployANONToken() {
 
 export const createAztecAccount = async () => {
   try {
+    const privateRandomBytes = crypto.randomBytes(32);
+
+    const privateHexString = "0x" + privateRandomBytes.toString("hex");
+
+    let encryptionPrivateKey = GrumpkinScalar.fromString(privateHexString);
+
+    const signingRandomBytes = crypto.randomBytes(32);
+
+    const signingHexString = "0x" + signingRandomBytes.toString("hex");
+
+    let signingPrivateKey = GrumpkinScalar.fromString(signingHexString);
+
     const userWallet = await getSchnorrAccount(
       pxe,
       encryptionPrivateKey,
       signingPrivateKey
     ).waitDeploy();
 
-    return userWallet;
+    let walletDetails = {
+      "address": userWallet.getAddress().toString(),
+      "signingKey": signingHexString,
+    };
+
+    return walletDetails;
   } catch (error) {
     return null;
   }
 }
 
-export const addMinter = async (wallet) => {
+export const addMinter = async (address: string) => {
     try {
      
   const tokenContractAdmin = await TokenContract.at(
@@ -69,7 +89,7 @@ export const addMinter = async (wallet) => {
     );
     // caller has to be an admin
     await tokenContractAdmin.methods
-      .set_minter(wallet.getAddress(), true)
+      .set_minter(AztecAddress.fromString(address), true)
       .send()
       .wait();
 
@@ -80,16 +100,14 @@ export const addMinter = async (wallet) => {
   }
 };
 
-export const mintTokens = async (userWallet) => {
+// should only be called by admin
+export const mintTokens = async () => {
 
   try {
-    
-    const tokenContractUser  = await TokenContract.at(
+    const tokenContractAdmin  = await TokenContract.at(
       deployedTokenContractAddress,
-      userWallet
+      adminWallet
     );
-
-    const userAddress = userWallet.getAddress();
 
     const pendingShieldsStorageSlot = new Fr(5); // The storage slot of `pending_shields` is 5.
     const noteTypeId = new Fr(84114971101151129711410111011678111116101n); // TransparentNote
@@ -98,9 +116,9 @@ export const mintTokens = async (userWallet) => {
     const userSecret = Fr.random();
     const userSecretHash = computeMessageSecretHash(userSecret);
 
-    const amount = 10_000n;
+    const amount = 1_000_000_000n;
 
-    const receipt = await tokenContractUser.methods
+    const receipt = await tokenContractAdmin.methods
       .mint_private(amount, userSecretHash)
       .send()
       .wait();
@@ -109,7 +127,7 @@ export const mintTokens = async (userWallet) => {
     await pxe.addNote(
       new ExtendedNote(
         userPendingShield,
-        userAddress,
+        adminAddress,
         deployedTokenContractAddress,
         pendingShieldsStorageSlot,
         noteTypeId,
@@ -117,30 +135,52 @@ export const mintTokens = async (userWallet) => {
       )
     );
 
-    await tokenContractUser.methods
-      .redeem_shield(userAddress, amount, userSecret)
+    await tokenContractAdmin.methods
+      .redeem_shield(adminAddress, amount, userSecret)
       .send()
       .wait();
 
-    const balance = await tokenContractUser.methods
-      .balance_of_private(userAddress)
+    const _balance = await tokenContractAdmin.methods
+      .balance_of_private(adminAddress)
       .view();
 
-    return balance;
+    return _balance;
   }
   catch (error) {
     return null;
   }
 }
 
-// pass in deployed contract address as deployedContract.address
+// transfers tokens from an admin to a user
+export const claimTokens = async (
+  address: string,
+) => {
+  try {
+    const contract = await Contract.at(
+      deployedTokenContractAddress,
+      TokenContractArtifact,
+      adminWallet
+    );
+
+    const amount = 10_000n;
+
+    const _tx = await contract.methods
+      .transfer(amount, AztecAddress.fromString(address))
+      .send()
+      .wait();
+    return _tx.txHash;
+  } catch (error) {
+    return null;
+  }
+};
+
 // used to get the balance of a user
-export const getBalance = async (address: string) => {
+export const getUserBalance = async (address: string, signingKey: string) => {
   try {
     const userWallet = await getSchnorrWallet(
       pxe,
       AztecAddress.fromString(address),
-      signingPrivateKey
+      GrumpkinScalar.fromString(signingKey),
     );
 
     const contract = await Contract.at(
@@ -154,8 +194,7 @@ export const getBalance = async (address: string) => {
       .view();
 
     return _balance;
-  }
-  catch (error) {
+  } catch (error) {
     return null;
   }
 };
@@ -166,11 +205,11 @@ export const getDonationBalance = async () => {
     const contract = await Contract.at(
       deployedTokenContractAddress,
       TokenContractArtifact,
-      adminWallet
+      donationWallet
     );
 
     const _balance = await contract.methods
-      .balance_of_private(adminAddress)
+      .balance_of_private(donationAddress)
       .view();
 
     return _balance;
@@ -179,12 +218,13 @@ export const getDonationBalance = async () => {
   }
 };
 
-export const sendDonation = async (address: string, amount: number) => {
+// used to send tokens from a user to the donation address
+export const sendDonation = async (address: string, signingKey: string) => {
   try {
     const userWallet = await getSchnorrWallet(
       pxe,
       AztecAddress.fromString(address),
-      signingPrivateKey
+      GrumpkinScalar.fromString(signingKey),
     );
 
     const contract = await Contract.at(
@@ -193,11 +233,13 @@ export const sendDonation = async (address: string, amount: number) => {
       userWallet
     );
 
+    const amount = 1_000n;
+
     const _tx = await contract.methods
-      .transfer(amount, adminAddress)
+      .transfer(amount, donationAddress)
       .send()
       .wait();
-    return _tx;
+    return _tx.txHash;
   } catch (error) {
     return null;
   }
