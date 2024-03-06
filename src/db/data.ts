@@ -8,9 +8,16 @@ const redis = new Redis({
 
 export async function getWalletDetails(fid: string) {
   try {
-    const values = await redis.hgetall(fid);
+    let values = await redis.hgetall(fid);
+    values = Object(values);
     console.log("Retrieved values:", values);
-    return values;
+    if (Object.keys(values).length === 0) {
+      return null
+    } else {
+      return values;
+    }
+    // console.log("Retrieved values:", values);
+    // return values;
   } catch (error) {
     console.error(`Failed to retrieve wallet details: ${error}`);
     return null;
