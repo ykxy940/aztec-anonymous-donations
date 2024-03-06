@@ -30,7 +30,7 @@ const donationAddress = donationWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x2c5883b4e0457c8db2749ad8f64a0a13d6cd1b1cbf9540ff21cdba134cefac5d"
+  "0x15d2095bb5ae00cf23d231cee3b5396d1c63618954d3f9ed247fabe32006f85b"
 );
 
 export async function deployANONToken() {

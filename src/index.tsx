@@ -46,8 +46,8 @@ app.frame('/', async (c) => {
       <Button action="/create">Create Wallet</Button>,
       <Button action="/claim">Claim $ANON</Button>,
       <Button action="/donate">Donate</Button>,
-      // <Button action="/about">About</Button>,
-      <Button action="/deploy">Deploy</Button>,
+      <Button action="/about">About</Button>,
+      // <Button action="/deploy">Deploy</Button>,
       // <Button action="/mint">Mint</Button>,
     ],
   })
