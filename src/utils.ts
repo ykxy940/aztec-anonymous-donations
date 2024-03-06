@@ -51,17 +51,9 @@ export async function deployANONToken() {
 
 export const createAztecAccount = async () => {
   try {
-    const privateRandomBytes = crypto.randomBytes(32);
+    const encryptionPrivateKey = GrumpkinScalar.random();
 
-    const privateHexString = "0x" + privateRandomBytes.toString("hex");
-
-    let encryptionPrivateKey = GrumpkinScalar.fromString(privateHexString);
-
-    const signingRandomBytes = crypto.randomBytes(32);
-
-    const signingHexString = "0x" + signingRandomBytes.toString("hex");
-
-    let signingPrivateKey = GrumpkinScalar.fromString(signingHexString);
+    const signingPrivateKey = GrumpkinScalar.random();
 
     const userWallet = await getSchnorrAccount(
       pxe,
@@ -71,7 +63,7 @@ export const createAztecAccount = async () => {
 
     let walletDetails = {
       "address": userWallet.getAddress().toString(),
-      "signingKey": signingHexString,
+      "signingKey": signingPrivateKey.toString(),
     };
 
     return walletDetails;
@@ -156,22 +148,18 @@ export const claimTokens = async (
   address: string,
 ) => {
   try {
-    const contract = await Contract.at(
+    const contract  = await TokenContract.at(
       deployedTokenContractAddress,
-      TokenContractArtifact,
       adminWallet
     );
-    
-    console.log("Contract: ", contract)
+
     const amount = 10_000n;
 
-    // simulate nonce using randomness
-    let min = 0;
-    let max = 1000000;
-    let nonce = Math.floor(Math.random() * (max - min + 1)) + min;
-
+    let nonce = 0;
+    console.log("Transfer Address: ", address);
+    console.log("From Aztec Address: ", AztecAddress.fromString(address));    
     const _tx = await contract.methods
-      .transfer(adminAddress, AztecAddress.fromString(address), amount, nonce)
+      .transfer(adminAddress, donationAddress, amount, nonce)
       .send()
       .wait();
     console.log("Transaction: ", _tx);
@@ -244,13 +232,11 @@ export const sendDonation = async (address: string, signingKey: string) => {
     );
 
     const amount = 1_000n;
-    // simulate nonce using randomness
-    let min = 0;
-    let max = 1000000;
-    let nonce = Math.floor(Math.random() * (max - min + 1)) + min;
-
+    
+    let nonce = 0;
+    
     const _tx = await contract.methods
-      .transfer(userWallet.getAddress(), donationAddress, amount)
+      .transfer(userWallet.getAddress(), donationAddress, amount, nonce)
       .send()
       .wait();
     return _tx.txHash;
