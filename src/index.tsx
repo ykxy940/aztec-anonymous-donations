@@ -103,9 +103,11 @@ app.frame('/create', async (c) => {
   let signingKey;
 
 try {
- let walletDetails = await getWalletDetails(String(fid)); 
+ let walletDetails = await getWalletDetails(String(fid));
+
  if (!walletDetails) {
   const aztecAccount = await createAztecAccount()
+  console.log('aztecAccount:', aztecAccount)
     if (!aztecAccount) {
       address = null
     } else {
@@ -119,6 +121,8 @@ try {
 } catch (error) {
  console.error('Error:', error);
 }
+
+console.log("Address: ", address);
 
   return c.res({
     title: 'Create Wallet',

@@ -12,7 +12,8 @@ export async function getWalletDetails(fid: string) {
     console.log("Retrieved values:", values);
     return values;
   } catch (error) {
-    console.error(`Failed to retrieve wallet: ${error}`);
+    console.error(`Failed to retrieve wallet details: ${error}`);
+    return null;
   }
 }
 
@@ -28,6 +29,7 @@ export async function storeWalletDetails(fid: string, address: string, signingKe
     console.log("Values stored successfully");
   } catch (error) {
     console.error("Failed to store values:", error);
+    return null;
   }
 }
 
