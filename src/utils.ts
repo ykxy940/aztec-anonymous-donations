@@ -10,7 +10,7 @@ import {
   AztecAddress,
 } from "@aztec/aztec.js";
 
-import { TokenContract } from "./contracts/token/src/artifacts/Token";
+import { TokenContract } from "./contracts/token_contract/src/artifacts/Token";
 
 import 'dotenv/config';
 
