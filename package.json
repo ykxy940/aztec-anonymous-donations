@@ -3,19 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "frog dev --host"
+    "dev": "frog dev --proxy ngrok"
   },
   "dependencies": {
-    "@aztec/accounts": "^0.24.0",
-    "@aztec/aztec.js": "^0.24.0",
-    "@aztec/noir-contracts.js": "^0.24.0",
+    "@aztec/accounts": "latest",
+    "@aztec/aztec.js": "latest",
+    "@aztec/noir-contracts.js": "latest",
+    "@types/node": "latest",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "frog": "latest",
     "hono": "^4",
     "ioredis": "^5.3.2"
-  },
-  "devDependencies": {
-    "typescript": "latest"
   }
 }

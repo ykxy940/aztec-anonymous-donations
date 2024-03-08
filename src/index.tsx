@@ -46,8 +46,8 @@ app.frame('/', async (c) => {
       <Button action="/create">Create Wallet</Button>,
       <Button action="/claim">Claim $ANON</Button>,
       <Button action="/donate">Donate</Button>,
-      // <Button action="/about">About</Button>,
-      <Button action="/deploy">Deploy</Button>,
+      <Button action="/about">About</Button>,
+      // <Button action="/deploy">Deploy</Button>,
       // <Button action="/mint">Mint</Button>,
     ],
   })
@@ -408,7 +408,7 @@ app.frame('/deploy', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {`Successfully deployed ANONToken contract : ${deployedContractAddress}`}
+          { (deployedContractAddress) ? `Successfully deployed ANONToken contract : ${deployedContractAddress}` : 'Error: Token Not Deployed'}
         </div>
       </div>
     ),
@@ -450,7 +450,7 @@ app.frame('/mint', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {`ANONToken Admin Balance : ${balance}`}
+          { (balance) ? `ANONToken Admin Balance : ${balance}` : 'Tokens Not Minted'}
         </div>
       </div>
     ),

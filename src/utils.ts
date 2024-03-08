@@ -14,7 +14,7 @@ import { TokenContract } from "./contracts/token_contract/src/artifacts/Token";
 
 import 'dotenv/config';
 
-const PXE_URL = process.env.PXE_URL || "http://localhost:8080";
+const PXE_URL = process.env.PXE_URL || "http://127.0.0.1:8080";
 
 const pxe = createPXEClient(PXE_URL);
 
@@ -28,10 +28,12 @@ const donationAddress = donationWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x05da99d9649342b43b2cb4bf440e1a7bcb7182834c9fb9c0a49077ce87f4bf35"
+  "0x20e7740493c8233f4cc032f28b2bbeb179ec3678018de45974c8561b8a0d2b5c"
 );
 
 export async function deployANONToken() {
+  try {
+
   const deployedContract = await TokenContract.deploy(
     adminWallet, // wallet instance
     adminWallet.getAddress(), // account
@@ -45,6 +47,11 @@ export async function deployANONToken() {
   console.log("deployedContract Address: ", deployedContract.address.toString());
 
   return deployedContract.address;
+
+  } catch (error) {
+    console.log("Deployment Error: ", error);
+    return null;
+  }
 }
 
 export const createAztecAccount = async () => {
