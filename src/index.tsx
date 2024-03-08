@@ -1,5 +1,5 @@
 import { Button, Frog } from 'frog'
-import { deployANONToken, mintTokens, claimTokens, createAztecAccount, getUserBalance, sendDonation, getDonationBalance } from './utils';
+import { deployANONToken, claimTokens, createAztecAccount, getUserBalance, sendDonation, getDonationBalance } from './utils';
 import { getWalletDetails, storeWalletDetails } from "./db/data";
 
 export const app = new Frog({
@@ -48,7 +48,6 @@ app.frame('/', async (c) => {
       <Button action="/donate">Donate</Button>,
       <Button action="/about">About</Button>,
       // <Button action="/deploy">Deploy</Button>,
-      // <Button action="/mint">Mint</Button>,
     ],
   })
 })
@@ -282,7 +281,7 @@ app.frame('/donate', async (c) => {
     ),
     intents: [
       !address && <Button action="/create">Create Wallet</Button>,
-      <Button action="/donate-transaction">Confirm</Button>,
+      address && <Button action="/donate-transaction">Confirm</Button>,
       <Button action="/">Back</Button>,
     ],
   })
@@ -408,49 +407,7 @@ app.frame('/deploy', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (deployedContractAddress) ? `Successfully deployed ANONToken contract : ${deployedContractAddress}` : 'Error: Token Not Deployed'}
-        </div>
-      </div>
-    ),
-    intents: [
-      <Button action="/">Back</Button>,
-    ],
-  })
-})
-
-app.frame('/mint', async (c) => {
-  const balance = await mintTokens();
-
-  return c.res({
-    title: 'Mint',
-    image: (
-      <div
-        style={{
-          alignItems: 'center',
-          background: '#7D4AE9',
-          backgroundSize: '100% 100%',
-          display: 'flex',
-          flexDirection: 'column',
-          flexWrap: 'nowrap',
-          height: '100%',
-          justifyContent: 'center',
-          textAlign: 'center',
-          width: '100%',
-        }}
-      >
-        <div
-          style={{
-            color: 'white',
-            fontSize: 60,
-            fontStyle: 'normal',
-            letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            marginTop: 30,
-            padding: '0 120px',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          { (balance) ? `ANONToken Admin Balance : ${balance}` : 'Tokens Not Minted'}
+          { (deployedContractAddress) ? `Successfully deployed ANONToken contract : ${deployedContractAddress}` : 'Could not deploy token'}
         </div>
       </div>
     ),

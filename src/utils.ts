@@ -10,9 +10,9 @@ import {
   AztecAddress,
 } from "@aztec/aztec.js";
 
-import { TokenContract } from "./contracts/token_contract/src/artifacts/Token";
+import { EasyPrivateTokenContract } from "./contracts/easy_private_token_contract/src/artifacts/EasyPrivateToken";
 
-import 'dotenv/config';
+import "dotenv/config";
 
 const PXE_URL = process.env.PXE_URL || "http://127.0.0.1:8080";
 
@@ -20,7 +20,7 @@ const pxe = createPXEClient(PXE_URL);
 
 const accounts = await getDeployedTestAccountsWallets(pxe);
 
-const adminWallet = accounts[0]
+const adminWallet = accounts[0];
 const adminAddress = adminWallet.getAddress();
 
 const donationWallet = accounts[1];
@@ -28,28 +28,28 @@ const donationAddress = donationWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x20e7740493c8233f4cc032f28b2bbeb179ec3678018de45974c8561b8a0d2b5c"
+  "0x207e97b9204ddebca5fb918695138cbd197474d6a83b048f8017aa109dd51036"
 );
 
 export async function deployANONToken() {
   try {
+    let amount = 1000000000;
+    const deployedContract = await EasyPrivateTokenContract.deploy(
+      adminWallet, // wallet instance
+      amount,
+      adminWallet.getAddress(), // account
+    )
+      .send()
+      .deployed();
 
-  const deployedContract = await TokenContract.deploy(
-    adminWallet, // wallet instance
-    adminWallet.getAddress(), // account
-    "ANON", // constructor arg1
-    "ANONToken", // constructor arg2
-    18
-  ) // constructor arg3
-    .send()
-    .deployed();
+    console.log(
+      "deployedContract Address: ",
+      deployedContract.address.toString()
+    );
 
-  console.log("deployedContract Address: ", deployedContract.address.toString());
-
-  return deployedContract.address;
-
+    return deployedContract.address;
   } catch (error) {
-    console.log("Deployment Error: ", error);
+    console.log("Error deploying ANON Token: ", error)
     return null;
   }
 }
@@ -67,83 +67,12 @@ export const createAztecAccount = async () => {
     ).waitDeploy();
 
     let walletDetails = {
-      "address": userWallet.getAddress().toString(),
-      "signingKey": signingPrivateKey.toString(),
+      address: userWallet.getAddress().toString(),
+      signingKey: signingPrivateKey.toString(),
     };
 
     return walletDetails;
   } catch (error) {
-    return null;
-  }
-}
-
-export const addMinter = async (address: string) => {
-    try {
-     
-  const tokenContractAdmin = await TokenContract.at(
-      deployedTokenContractAddress,
-      adminWallet
-    );
-    // caller has to be an admin
-    await tokenContractAdmin.methods
-      .set_minter(AztecAddress.fromString(address), true)
-      .send()
-      .wait();
-
-    return true;
-  } catch (error) {
-    console.log("ERROR: ", error)
-    return null;
-  }
-};
-
-// should only be called by admin
-export const mintTokens = async () => {
-
-  try {
-    const tokenContractAdmin  = await TokenContract.at(
-      deployedTokenContractAddress,
-      adminWallet
-    );
-
-    const pendingShieldsStorageSlot = new Fr(5); // The storage slot of `pending_shields` is 5.
-    const noteTypeId = new Fr(84114971101151129711410111011678111116101n); // TransparentNote
-
-    // Create a secret and a corresponding hash that will be used to mint funds privately
-    const userSecret = Fr.random();
-    const userSecretHash = computeMessageSecretHash(userSecret);
-
-    const amount = 1_000_000_000n;
-
-    const receipt = await tokenContractAdmin.methods
-      .mint_private(amount, userSecretHash)
-      .send()
-      .wait();
-
-    const userPendingShield = new Note([new Fr(amount), userSecretHash]);
-    await pxe.addNote(
-      new ExtendedNote(
-        userPendingShield,
-        adminAddress,
-        deployedTokenContractAddress,
-        pendingShieldsStorageSlot,
-        noteTypeId,
-        receipt.txHash
-      )
-    );
-
-    await tokenContractAdmin.methods
-      .redeem_shield(adminAddress, amount, userSecret)
-      .send()
-      .wait();
-
-    const _balance = await tokenContractAdmin.methods
-      .balance_of_private(adminAddress)
-      .view();
-
-    return _balance;
-  }
-  catch (error) {
     return null;
   }
 }
@@ -153,18 +82,16 @@ export const claimTokens = async (
   address: string,
 ) => {
   try {
-    const contract  = await TokenContract.at(
+    const contract  = await EasyPrivateTokenContract.at(
       deployedTokenContractAddress,
       adminWallet
     );
 
     let amount = 10_000n;
 
-    let nonce = 0;
     console.log("Transfer Address: ", address);
-    console.log("From Aztec Address: ", AztecAddress.fromString(address));    
     const _tx = await contract.methods
-      .transfer(adminAddress, donationAddress, amount, nonce)
+      .transfer(amount, adminAddress, AztecAddress.fromString(address))
       .send()
       .wait();
     console.log("Transaction: ", _tx);
@@ -173,7 +100,7 @@ export const claimTokens = async (
     console.log("Error: ", error);
     return null;
   }
-};
+}
 
 // used to get the balance of a user
 export const getUserBalance = async (address: string, signingKey: string) => {
@@ -184,13 +111,13 @@ export const getUserBalance = async (address: string, signingKey: string) => {
       GrumpkinScalar.fromString(signingKey),
     );
 
-    const contract = await TokenContract.at(
+    const contract = await EasyPrivateTokenContract.at(
       deployedTokenContractAddress,
       userWallet
     );
 
     const _balance = await contract.methods
-      .balance_of_private(userWallet.getAddress())
+      .getBalance(userWallet.getAddress())
       .view();
 
     return _balance;
@@ -199,25 +126,24 @@ export const getUserBalance = async (address: string, signingKey: string) => {
     return null;
   }
 };
+
 
 // Used to get the balance of the donation address
 export const getDonationBalance = async () => {
   try {
-    const contract = await TokenContract.at(
+    const contract = await EasyPrivateTokenContract.at(
       deployedTokenContractAddress,
       donationWallet
     );
 
-    const _balance = await contract.methods
-      .balance_of_private(donationAddress)
-      .view();
+    const _balance = await contract.methods.getBalance(donationAddress).view();
 
     return _balance;
   } catch (error) {
     console.log("Error: ", error);
     return null;
   }
-};
+}
 
 // used to send tokens from a user to the donation address
 export const sendDonation = async (address: string, signingKey: string) => {
@@ -228,17 +154,15 @@ export const sendDonation = async (address: string, signingKey: string) => {
       GrumpkinScalar.fromString(signingKey),
     );
 
-    const contract = await TokenContract.at(
+    const contract = await EasyPrivateTokenContract.at(
       deployedTokenContractAddress,
       userWallet
     );
 
     const amount = 1_000n;
     
-    let nonce = 0;
-    
     const _tx = await contract.methods
-      .transfer(userWallet.getAddress(), donationAddress, amount, nonce)
+      .transfer(amount, userWallet.getAddress(), donationAddress)
       .send()
       .wait();
     return _tx.txHash;
