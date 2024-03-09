@@ -10,14 +10,11 @@ export async function getWalletDetails(fid: string) {
   try {
     let values = await redis.hgetall(fid);
     values = Object(values);
-    console.log("Retrieved values:", values);
     if (Object.keys(values).length === 0) {
       return null
     } else {
       return values;
     }
-    // console.log("Retrieved values:", values);
-    // return values;
   } catch (error) {
     console.error(`Failed to retrieve wallet details: ${error}`);
     return null;

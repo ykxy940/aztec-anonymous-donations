@@ -28,7 +28,7 @@ const donationAddress = donationWallet.getAddress();
 
 // change this to the  deployed Contract address
 const deployedTokenContractAddress = AztecAddress.fromString(
-  "0x207e97b9204ddebca5fb918695138cbd197474d6a83b048f8017aa109dd51036"
+  "0x2ae4e97cdce0a33635fd0a6de56644827083e4bb3534ded6fd4c8e79bfc91e86"
 );
 
 export async function deployANONToken() {
@@ -89,13 +89,11 @@ export const claimTokens = async (
 
     let amount = 10_000n;
 
-    console.log("Transfer Address: ", address);
     const _tx = await contract.methods
       .transfer(amount, adminAddress, AztecAddress.fromString(address))
       .send()
       .wait();
-    console.log("Transaction: ", _tx);
-    return _tx.txHash;
+      return _tx.txHash;
   } catch (error) {
     console.log("Error: ", error);
     return null;

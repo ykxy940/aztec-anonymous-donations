@@ -8,7 +8,7 @@ export const app = new Frog({
 })
 
 app.frame('/', async (c) => {
-  
+ 
   return c.res({
     title: 'Anonymous Donations',
     image: (
@@ -88,16 +88,23 @@ app.frame('/about', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/claim">Claim $ANON</Button>,
       <Button action="/">Back</Button>,
     ],
   })
 })
 
 app.frame('/create', async (c) => {
-  const { frameData } = c
-  const { fid } = frameData
+  const { frameData, status } = c
+  const { fid } = frameData  
 
+  if (status === 'initial') {
+    return;
+  }
+  
+  if (status === 'redirect') {
+    return;
+  }
+  
   let address;
   let signingKey;
 
@@ -140,7 +147,7 @@ try {
         <div
           style={{
             color: 'white',
-            fontSize: 60,
+            fontSize: 32,
             fontStyle: 'normal',
             letterSpacing: '-0.025em',
             lineHeight: 1.4,
@@ -160,7 +167,7 @@ try {
 })
 
 app.frame('/claim', async (c) => {
-  const { frameData } = c
+  const { frameData, status } = c
   const { fid } = frameData
 
   let address;
@@ -168,7 +175,6 @@ app.frame('/claim', async (c) => {
 
   try {
   let walletDetails = await getWalletDetails(String(fid));
-  console.log("Wallet Details: ", walletDetails);
   if (!walletDetails) {
     address = null;
   } else {
@@ -185,7 +191,6 @@ app.frame('/claim', async (c) => {
     txHash = await claimTokens(String(address));
   }
   
-  console.log("address: ", address);
   console.log("txHash: ", txHash);
 
   return c.res({
@@ -208,7 +213,7 @@ app.frame('/claim', async (c) => {
         <div
           style={{
             color: 'white',
-            fontSize: 60,
+            fontSize: 32,
             fontStyle: 'normal',
             letterSpacing: '-0.025em',
             lineHeight: 1.4,
@@ -217,19 +222,20 @@ app.frame('/claim', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (address && txHash) ? `You successfully claimed 10,000 $ANON tokens for donations. Transaction Hash: ${txHash}`: 'Could not claim $ANON tokens. Please try again later.'} 
+          { (address && txHash) ? `You successfully claimed 10,000 $ANON tokens for donations. Transaction Hash: ${txHash}`: 'Could not claim $ANON tokens. Have you created a wallet. Please try again later.'} 
         </div>
       </div>
     ),
     intents: [
       txHash && <Button action="/donate">Donate</Button>,
+      !address && <Button action="/create">Create Wallet</Button>,
       <Button action="/">Back</Button>,
     ],
   })
 })
 
 app.frame('/donate', async (c) => {
-  const { frameData } = c
+  const { frameData, status } = c
   const { fid } = frameData
 
   let address;
@@ -288,8 +294,16 @@ app.frame('/donate', async (c) => {
 })
 
 app.frame('/donate-transaction', async (c) => {
-  const { frameData } = c
+  const { frameData, status } = c
   let { fid } = frameData
+  
+  if (status === 'initial') {
+    return;
+  }
+
+  if (status === 'redirect') {
+    return;
+  }
 
   let address;
   let signingKey;
@@ -356,7 +370,7 @@ app.frame('/donate-transaction', async (c) => {
         <div
           style={{
             color: 'white',
-            fontSize: 60,
+            fontSize: 33,
             fontStyle: 'normal',
             letterSpacing: '-0.025em',
             lineHeight: 1.4,
@@ -365,7 +379,7 @@ app.frame('/donate-transaction', async (c) => {
             whiteSpace: 'pre-wrap',
           }}
         >
-          { (txHash && donationBalance) ? `You donated $ANON tokens successfully. Transaction Hash: ${txHash} Total Donations: ${donationBalance} $ANON`: `${errorMessage}`}
+          { (txHash && donationBalance) ? `You donated 1,000 $ANON tokens successfully. Transaction Hash: ${txHash} Total Donations: ${donationBalance} $ANON`: `${errorMessage}`}
         </div>
       </div>
     ),
@@ -376,8 +390,18 @@ app.frame('/donate-transaction', async (c) => {
 })
 
 app.frame('/deploy', async (c) => {
-  const deployedContractAddress = await deployANONToken();
+  const { status } = c
 
+  if (status === 'initial') {
+    return;
+  }
+
+  if (status === 'redirect') {
+    return;
+  }
+
+  const deployedContractAddress = await deployANONToken();
+  
   return c.res({
     title: 'Deploy',
     image: (
