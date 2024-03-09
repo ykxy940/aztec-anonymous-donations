@@ -8,7 +8,7 @@ After claiming $ANON tokens, users can donate and those tokens are transferred a
 
 ![aztec_anon_donations](https://github.com/ykxy940/aztec-anonymous-donations/assets/160770682/b0da4058-417d-4a15-9f7a-1a68faf1d2b0)
 
-https://youtu.be/hpbpXmHUNE4
+Video Presentation - https://youtu.be/hpbpXmHUNE4
 
 The frame was built using the frog framework by Paradigm and Wevm - https://frog.fm
 
