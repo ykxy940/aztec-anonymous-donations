@@ -22,7 +22,6 @@ Redis is used to store Farcaster IDs, so that individuals cannot create multiple
 You can then install frog and run the application via the commands below.
 
 ```
-npm init frog
 npm install
 npm run dev
 ```
